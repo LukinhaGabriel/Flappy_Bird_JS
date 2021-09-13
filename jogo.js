@@ -30,7 +30,7 @@
                 chao.width, chao.height,
             );    
         }
-    }
+    };
 
     //background
     const bg = {
@@ -58,7 +58,7 @@
                 bg.width, bg.height,
             );   
         }
-    }
+    };
 
     
     const flappubird = {
@@ -84,16 +84,79 @@
             );    
         } 
         
+    };
+
+    //[mensagemGetReady]
+    const mensagemGetReady = {
+        spritesX: 134,
+        spritesY: 0,
+        width: 174,
+        height: 152,
+        x: ($canvas.width / 2) - 174 / 2,
+        y: 50,
+        desenha(){
+            contexto.drawImage(
+                sprites,
+                mensagemGetReady.spritesX, mensagemGetReady.spritesY, //Sprite X e Sprite Y 
+                mensagemGetReady.width, mensagemGetReady.height, //Sprite w e Sprite h tamanho do recorte na sprite
+                mensagemGetReady.x, mensagemGetReady.y, //X e Y da figura geometrica do canvas
+                mensagemGetReady.width, mensagemGetReady.height,
+            );    
+        }
+    };
+
+    //
+    // [Telas]
+    //
+    let telaAtiva = {};
+    
+    function mudaParaTela(novaTela){
+        telaAtiva = novaTela;
     }
 
-    function loop(){
-        flappubird.atualiza();
+    const Telas = {
+        INICIO: {
+            desenha() {
+                bg.desenha();  
+                chao.desenha();
+                flappubird.desenha();
+                mensagemGetReady.desenha();
+            },
+            click(){
+                mudaParaTela(Telas.JOGO);
+            },
+            atualiza() {
 
-        bg.desenha();  
-        chao.desenha();
-        flappubird.desenha();
+            }
+        }
+    };
+
+    Telas.JOGO = {
+        desenha(){
+            bg.desenha();  
+            chao.desenha();
+            flappubird.desenha();
+
+        },
+        atualiza(){
+            flappubird.atualiza();
+        }
+    };
+
+
+    function loop(){
+        telaAtiva.desenha();
+        telaAtiva.atualiza();
 
         requestAnimationFrame(loop);
     }
 
+    //janela do navegador
+    window.addEventListener('click', function(){
+        if(telaAtiva.click){
+            telaAtiva.click()
+        };
+    });
+
+    mudaParaTela(Telas.INICIO);
     loop();
