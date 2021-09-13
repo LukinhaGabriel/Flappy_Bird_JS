@@ -2,7 +2,8 @@
 
     let frames = 0;
     const som_HIT = new Audio();
-    som_HIT.src = './efeitos/hit.wav'
+    som_HIT.src = './efeitos/caiu.wav'
+
     
     const sprites = new Image();
     sprites.src = './sprites.png';
@@ -100,10 +101,10 @@
             y: 50,
             pulo: 4.6,
             pula(){
-                console.log('Devo pular');
-                //console.log('[antes]',flappyBird.velocidade);
+                // console.log('Devo pular');
+                // console.log('[antes]',flappyBird.velocidade);
                 flappyBird.velocidade = - flappyBird.pulo;
-                //console.log('[depois]',flappyBird.velocidade);
+                // console.log('[depois]',flappyBird.velocidade);
             },
             gravidade: 0.25,
             velocidade: 0,
@@ -111,12 +112,9 @@
                 if(fazColisao(flappyBird, globais.chao)){
                     console.log('Fez colisão');
                     som_HIT.play();
-
-                    setTimeout( () => {
-
-                        mudaParaTela(Telas.INICIO);
-
-                    }, 500);
+                    
+                    mudaParaTela(Telas.GAME_OVER);
+                    
                     return;
                 }
                 flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
@@ -131,7 +129,7 @@
             atualizaOFrameAtual(){
                 const intevaloDeFrames = 10;
                 const passouOIntervalo = frames % intevaloDeFrames === 0;
-                console.log('[passouOIntervalo]', passouOIntervalo);
+                // console.log('[passouOIntervalo]', passouOIntervalo);
 
                 if(passouOIntervalo){
                     const baseDoIncremento = 1
@@ -179,6 +177,139 @@
         }
     };
 
+    //[Mensagem de GameOver]
+    const mensagemGameOver = {
+        spritesX: 134,
+        spritesY: 153,
+        width: 226,
+        height: 200,
+        x: ($canvas.width / 2) - 226 / 2,
+        y: 50,
+        desenha(){
+            contexto.drawImage(
+                sprites,
+                mensagemGameOver.spritesX, mensagemGameOver.spritesY, //Sprite X e Sprite Y 
+                mensagemGameOver.width, mensagemGameOver.height, //Sprite w e Sprite h tamanho do recorte na sprite
+                mensagemGameOver.x, mensagemGameOver.y, //X e Y da figura geometrica do canvas
+                mensagemGameOver.width, mensagemGameOver.height,
+            );    
+        }
+    };
+
+    function criaCanos(){
+        const canos = {
+            width: 52,
+            height: 400,
+            chao: {
+                spritesX: 0,
+                spritesY: 169,
+            },
+            ceu: {
+                spritesX: 52,
+                spritesY: 169,
+            },
+            espaco: 80,
+            desenha(){
+                canos.pares.forEach(function(par){
+                    const yRandom = par.y;
+                    const espacamentoEntreCanos = 90;
+    
+                    const canoCeuX = par.x;
+                    const canoCeuY = yRandom;
+                    
+                    //[Cano do Céu]
+                    contexto.drawImage(
+                        sprites,
+                        canos.ceu.spritesX, canos.ceu.spritesY,
+                        canos.width, canos.height,
+                        canoCeuX, canoCeuY,
+                        canos.width, canos.height,
+                    );
+                    //[Cano do Chão]
+                    const canoChaoX = par.x;
+                    const canoChaoY = canos.height + espacamentoEntreCanos + yRandom;
+                    contexto.drawImage(
+                        sprites,
+                        canos.chao.spritesX, canos.chao.spritesY,
+                        canos.width, canos.height,
+                        canoChaoX, canoChaoY,
+                        canos.width, canos.height,
+                    );
+                    par.canoCeu = {
+                        x: canoCeuX,
+                        y: canos.height + canoCeuY,
+                    };
+                    par.canoChao = {
+                        x: canoChaoX,
+                        y: canoChaoY,
+                    }
+                })
+            },
+            temColisaoComOFlappyBird(par){
+                const cabecaDoFlappy = globais.flappyBird.y;
+                const peDoFlappy = globais.flappyBird.y + globais.flappyBird.height;
+                
+                if((globais.flappyBird.x + globais.flappyBird.width) >= par.x){
+                    // console.log('Flappy bird invadiu a área dos canos')    
+                    if(cabecaDoFlappy <= par.canoCeu.y){
+                        return true;
+                    }
+                    if(peDoFlappy >= par.canoChao.y){
+                        return true;
+                    }
+                };
+                return false;
+            },
+            pares: [],
+            atualiza(){ 
+                const passou100Frames = frames % 100 === 0;
+                if(passou100Frames){
+                    console.log('passou 100 Frames');
+                    canos.pares.push({
+                        x: $canvas.width,
+                        y: -150 * (Math.random() + 1),
+                    },);
+                }
+                canos.pares.forEach(function(par){
+                    par.x = par.x - 2;
+
+                    if(canos.temColisaoComOFlappyBird(par)){
+                        console.log('perdeu')
+                        mudaParaTela(Telas.GAME_OVER);
+                    }
+                    if(par.x + canos.width <= 0){
+                        canos.pares.shift();
+                    }
+                
+                }); 
+            }
+        }
+        return canos;
+
+    }
+
+    function criaPlacar(){
+        const placar = {
+            
+            pontuacao: 0,
+            desenha(){
+                contexto.font = '35px "VT323" ';
+                contexto.textAlign = 'center';
+                contexto.fillStyle = 'white';
+                contexto.fillText(`Score ${placar.pontuacao}`, $canvas.width - 160, 35);
+            },
+            atualiza(){
+                const intevaloDeFrames = 20;
+                const passouOIntervalo = frames % intevaloDeFrames === 0;
+
+                if(passouOIntervalo){
+                    placar.pontuacao = placar.pontuacao + 1;
+                }
+            }
+        };
+        return placar;
+    }
+
     //
     // [Telas]
     //
@@ -199,11 +330,12 @@
             inicializa() {
                 globais.flappyBird = criaFlappyBird();
                 globais.chao = criaChao();
+                globais.canos = criaCanos();
             },
             desenha() {
                 bg.desenha();  
-                globais.chao.desenha();
                 globais.flappyBird.desenha();
+                globais.chao.desenha();
                 mensagemGetReady.desenha();
             },
             click(){
@@ -216,10 +348,15 @@
     };
 
     Telas.JOGO = {
+        inicializa(){
+            globais.placar = criaPlacar();
+        },
         desenha(){
-            bg.desenha();  
+            bg.desenha();
+            globais.canos.desenha();  
             globais.chao.desenha();
             globais.flappyBird.desenha();
+            globais.placar.desenha();
 
         },
         click(){
@@ -227,9 +364,26 @@
         },
         atualiza(){
             globais.flappyBird.atualiza();
+            globais.canos.atualiza();
+            globais.chao.atualiza();
+            globais.placar.atualiza();
         }
     };
 
+    Telas.GAME_OVER = {
+        desenha(){  
+            mensagemGameOver.desenha();
+        },
+
+        click(){
+            mudaParaTela(Telas.INICIO);
+        },
+
+        atualiza(){
+
+        },
+    }
+    
 
     function loop(){
         telaAtiva.desenha();
