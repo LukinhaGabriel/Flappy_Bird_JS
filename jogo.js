@@ -1,5 +1,8 @@
     console.log('[Ilukinha-moya] Flappy Bird');
 
+    const som_HIT = new Audio();
+    som_HIT.src = './efeitos/hit.wav'
+    
     const sprites = new Image();
     sprites.src = './sprites.png';
 
@@ -60,31 +63,64 @@
         }
     };
 
-    
-    const flappubird = {
-        spritesX: 0,
-        spritesY: 0,
-        width: 33,
-        height: 24,
-        x: 10,
-        y: 50,
-        gravidade: 0.25,
-        velocidade: 0,
-        atualiza(){
-            flappubird.velocidade = flappubird.velocidade + flappubird.gravidade;
-            flappubird.y = flappubird.y + flappubird.velocidade;
-        },
-        desenha(){
-             contexto.drawImage(
-                sprites,
-                flappubird.spritesX, flappubird.spritesY, //Sprite X e Sprite Y 
-                flappubird.width, flappubird.height, //Sprite w e Sprite h tamanho do recorte na sprite
-                flappubird.x, flappubird.y, //X e Y da figura geometrica do canvas
-                flappubird.width, flappubird.height,
-            );    
-        } 
+    function fazColisao(flappyBird, chao){
+        const flappyBirdY = flappyBird.y + flappyBird.height;
+        const chaoY = chao.y;
         
-    };
+        if(flappyBirdY >= chaoY){
+            return true;
+        }
+
+        return false;
+
+    }
+    
+    function criaFlappyBird(){
+        const flappyBird = {
+            spritesX: 0,
+            spritesY: 0,
+            width: 33,
+            height: 24,
+            x: 10,
+            y: 50,
+            pulo: 4.6,
+            pula(){
+                console.log('Devo pular');
+                //console.log('[antes]',flappyBird.velocidade);
+                flappyBird.velocidade = - flappyBird.pulo;
+                //console.log('[depois]',flappyBird.velocidade);
+            },
+            gravidade: 0.25,
+            velocidade: 0,
+            atualiza(){
+                if(fazColisao(flappyBird, chao)){
+                    console.log('Fez colisão');
+                    som_HIT.play();
+
+                    setTimeout( () => {
+
+                        mudaParaTela(Telas.INICIO);
+
+                    }, 500);
+                    return;
+                }
+                flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
+                flappyBird.y = flappyBird.y + flappyBird.velocidade;
+            },
+            desenha(){
+                 contexto.drawImage(
+                    sprites,
+                    flappyBird.spritesX, flappyBird.spritesY, //Sprite X e Sprite Y 
+                    flappyBird.width, flappyBird.height, //Sprite w e Sprite h tamanho do recorte na sprite
+                    flappyBird.x, flappyBird.y, //X e Y da figura geometrica do canvas
+                    flappyBird.width, flappyBird.height,
+                );    
+            } 
+            
+        };
+        return flappyBird;
+   };
+
 
     //[mensagemGetReady]
     const mensagemGetReady = {
@@ -108,18 +144,27 @@
     //
     // [Telas]
     //
+    const globais = {};
     let telaAtiva = {};
     
     function mudaParaTela(novaTela){
         telaAtiva = novaTela;
+
+        if(telaAtiva.inicializa){
+            telaAtiva.inicializa();
+        }
+        
     }
 
     const Telas = {
         INICIO: {
+            inicializa() {
+                globais.flappyBird = criaFlappyBird();
+            },
             desenha() {
                 bg.desenha();  
                 chao.desenha();
-                flappubird.desenha();
+                globais.flappyBird.desenha();
                 mensagemGetReady.desenha();
             },
             click(){
@@ -135,11 +180,14 @@
         desenha(){
             bg.desenha();  
             chao.desenha();
-            flappubird.desenha();
+            globais.flappyBird.desenha();
 
         },
+        click(){
+            globais.flappyBird.pula();
+        },
         atualiza(){
-            flappubird.atualiza();
+            globais.flappyBird.atualiza();
         }
     };
 
@@ -151,8 +199,8 @@
         requestAnimationFrame(loop);
     }
 
-    //janela do navegador
-    window.addEventListener('click', function(){
+    //click na tela do canvas
+    $canvas.addEventListener('click', function(){
         if(telaAtiva.click){
             telaAtiva.click()
         };
