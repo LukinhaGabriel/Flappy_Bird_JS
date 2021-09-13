@@ -68,6 +68,12 @@
         height: 24,
         x: 10,
         y: 50,
+        gravidade: 0.25,
+        velocidade: 0,
+        atualiza(){
+            flappubird.velocidade = flappubird.velocidade + flappubird.gravidade;
+            flappubird.y = flappubird.y + flappubird.velocidade;
+        },
         desenha(){
              contexto.drawImage(
                 sprites,
@@ -81,12 +87,12 @@
     }
 
     function loop(){
-        
+        flappubird.atualiza();
+
         bg.desenha();  
         chao.desenha();
         flappubird.desenha();
-        
-        flappubird.y = flappubird.y + 1;
+
         requestAnimationFrame(loop);
     }
 
