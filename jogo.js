@@ -1,8 +1,16 @@
-    console.log('[Ilukinha-moya] Flappy Bird');
+    console.log('[Ilukinhadev] Flappy Bird');
 
     let frames = 0;
-    const som_HIT = new Audio();
-    som_HIT.src = './efeitos/caiu.wav'
+    const som_caiu = new Audio();
+    const som_hit = new Audio();
+    const som_pulo = new Audio();
+    const som_ponto = new Audio();
+    const trilha = new Audio();
+    som_caiu.src = './efeitos/caiu.wav';
+    som_hit.src = './efeitos/hit.wav';
+    som_pulo.src = './efeitos/pulo.wav';
+    som_ponto.src = './efeitos/ponto.wav';
+    trilha.src = './efeitos/trilha.wav';
 
     
     const sprites = new Image();
@@ -111,7 +119,7 @@
             atualiza(){
                 if(fazColisao(flappyBird, globais.chao)){
                     console.log('Fez colisão');
-                    som_HIT.play();
+                    som_caiu.play();
                     
                     mudaParaTela(Telas.GAME_OVER);
                     
@@ -193,6 +201,9 @@
                 mensagemGameOver.x, mensagemGameOver.y, //X e Y da figura geometrica do canvas
                 mensagemGameOver.width, mensagemGameOver.height,
             );    
+        },
+        atualiza(){
+         
         }
     };
 
@@ -274,7 +285,8 @@
                     par.x = par.x - 2;
 
                     if(canos.temColisaoComOFlappyBird(par)){
-                        console.log('perdeu')
+                        console.log('perdeu');
+                        som_hit.play();
                         mudaParaTela(Telas.GAME_OVER);
                     }
                     if(par.x + canos.width <= 0){
@@ -297,19 +309,86 @@
                 contexto.textAlign = 'center';
                 contexto.fillStyle = 'white';
                 contexto.fillText(`Score ${placar.pontuacao}`, $canvas.width - 160, 35);
+                
             },
             atualiza(){
                 const intevaloDeFrames = 20;
                 const passouOIntervalo = frames % intevaloDeFrames === 0;
 
                 if(passouOIntervalo){
-                    placar.pontuacao = placar.pontuacao + 1;
+                    placar.pontuacao = placar.pontuacao + 1; 
+                    if( placar.pontuacao === 10 || placar.pontuacao === 50 || placar.pontuacao === 100){
+                        //[bronze]
+                        som_ponto.play();
+                    };
                 }
+
+ 
             }
         };
-        return placar;
-    }
 
+        return placar;
+
+        
+    }
+    function criaMedalhas(){
+        const medalhas = {
+            width: 45,
+            height: 45,
+            bronze: {
+                spritesX: 48,
+                spritesY: 124,
+            },
+
+            prata: {
+                spritesX: 48,
+                spritesY: 78,
+            },
+            ouro: {
+                spritesX: 0,
+                spritesY: 124,
+            },
+            x: 75,
+            y: 135,
+            
+            
+            desenha(){            
+                if(globais.placar.pontuacao >= 10){
+                    //[bronze]
+                    contexto.drawImage(
+                    sprites,
+                    medalhas.bronze.spritesX, medalhas.bronze.spritesY,
+                    medalhas.width, medalhas.height,
+                    medalhas.x, medalhas.y,
+                    medalhas.width, medalhas.height,
+                    );
+                };
+                if(globais.placar.pontuacao >= 50){
+                    //[prata]
+                    contexto.drawImage(
+                        sprites,
+                        medalhas.prata.spritesX, medalhas.prata.spritesY,
+                        medalhas.width, medalhas.height,
+                        medalhas.x, medalhas.y,
+                        medalhas.width, medalhas.height,
+                    );
+                };
+                if(globais.placar.pontuacao >= 100){
+                    // //[Ouro]
+                    contexto.drawImage(
+                        sprites,
+                        medalhas.ouro.spritesX, medalhas.bronze.spritesY,
+                        medalhas.width, medalhas.height,
+                        medalhas.x, medalhas.y,
+                        medalhas.width, medalhas.height,
+                    );
+                }
+            },
+           
+            
+        };
+        return medalhas;
+    }
     //
     // [Telas]
     //
@@ -371,8 +450,12 @@
     };
 
     Telas.GAME_OVER = {
+        inicializa(){
+            globais.medalhas = criaMedalhas();
+        },
         desenha(){  
             mensagemGameOver.desenha();
+            globais.medalhas.desenha(); 
         },
 
         click(){
@@ -380,7 +463,7 @@
         },
 
         atualiza(){
-
+          
         },
     }
     
@@ -396,6 +479,7 @@
     //click na tela do canvas
     $canvas.addEventListener('click', function(){
         if(telaAtiva.click){
+            som_pulo.play();
             telaAtiva.click()
         };
     });
